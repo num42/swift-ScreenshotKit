@@ -7,6 +7,22 @@ A Swift package for capturing screenshots of iOS UI — including full-page scro
 - iOS 13.0+
 - Swift 6.2+
 
+## Building
+
+Because this package targets iOS (UIKit-only), pass the iOS Simulator SDK and triple explicitly:
+
+```sh
+swift build \
+  --sdk "$(xcrun --sdk iphonesimulator --show-sdk-path)" \
+  --triple arm64-apple-ios16.0-simulator
+```
+
+Or with `xcodebuild`:
+
+```sh
+xcodebuild build -scheme ScreenshotKit -destination "generic/platform=iOS Simulator"
+```
+
 ## Installation
 
 ### Swift Package Manager
