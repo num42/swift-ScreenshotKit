@@ -13,7 +13,7 @@ extension UIApplication {
       let bundleID = Bundle.main.bundleIdentifier
     else { return [] }
 
-    let snapshotsDir = tmpDir.replacing("tmp", with: "Library/SplashBoard/Snapshots")
+    let snapshotsDir = tmpDir.replacingOccurrences(of: "tmp", with: "Library/SplashBoard/Snapshots")
 
     guard
       let contents = try? FileManager.default.contentsOfDirectory(atPath: snapshotsDir),
