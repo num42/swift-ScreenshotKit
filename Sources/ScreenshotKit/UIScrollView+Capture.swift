@@ -81,6 +81,9 @@ extension UIScrollView {
         contentOffset = originalContentOffset
       }
 
+      let showEdgeEffects = hideEdgeEffects()
+      defer { showEdgeEffects() }
+
       insetsLayoutMarginsFromSafeArea = false
       contentInset = .zero
       layoutIfNeeded()
@@ -113,10 +116,23 @@ extension UIScrollView {
           contentOffset = CGPoint(x: 0, y: offsetY)
           layoutIfNeeded()
 
-          context.cgContext.saveGState()
-          context.cgContext.translateBy(x: 0, y: offsetY)
-          drawHierarchy(in: CGRect(origin: .zero, size: viewportSize), afterScreenUpdates: true)
-          context.cgContext.restoreGState()
+          let page = CGRect(origin: .zero, size: viewportSize)
+          var attempts = 0
+
+          repeat {
+            // SwiftUI re-applies its scroll view configuration during layout and
+            // during the screen update the draw waits for, which shows the edge
+            // effects again. A page drawn with them visible is drawn once more.
+            _ = hideEdgeEffects()
+
+            context.cgContext.saveGState()
+            context.cgContext.translateBy(x: 0, y: offsetY)
+            context.cgContext.clear(page)
+            drawHierarchy(in: page, afterScreenUpdates: true)
+            context.cgContext.restoreGState()
+
+            attempts += 1
+          } while edgeEffectsAreVisible && attempts < 3
 
           if offsetY >= maxOffsetY {
             break
@@ -125,6 +141,36 @@ extension UIScrollView {
           offsetY = min(offsetY + visibleHeight, maxOffsetY)
         }
       }
+    }
+  }
+
+  private var edgeEffectsAreVisible: Bool {
+    guard #available(iOS 26.0, *) else {
+      return false
+    }
+
+    return !topEdgeEffect.isHidden || !bottomEdgeEffect.isHidden
+  }
+
+  /// Hides the scroll edge effects (iOS 26) for the capture and returns the call that
+  /// restores them.
+  ///
+  /// The page-by-page capture scrolls the content under the edge effects, whose blurred
+  /// backdrop would otherwise land in the stitched image, in a state that depends on
+  /// render-server timing.
+  @MainActor
+  private func hideEdgeEffects() -> () -> Void {
+    guard #available(iOS 26.0, *) else {
+      return {}
+    }
+
+    let wereHidden = (topEdgeEffect.isHidden, bottomEdgeEffect.isHidden)
+    topEdgeEffect.isHidden = true
+    bottomEdgeEffect.isHidden = true
+
+    return {
+      self.topEdgeEffect.isHidden = wereHidden.0
+      self.bottomEdgeEffect.isHidden = wereHidden.1
     }
   }
 }
