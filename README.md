@@ -59,7 +59,7 @@ let image = await UIApplication.shared.stableSnapShot()
 
 ### Stable scroll view snapshot
 
-Captures the full scrollable content of the top view controller's scroll view, waiting for rendering to settle before compositing the full-page image.
+Captures the full scrollable content of the top view controller's scroll view, waiting for rendering to settle before compositing the full-page image. On iOS 26 the scroll edge effects are hidden while the pages are captured, so their blurred backdrop does not end up in the stitched image.
 
 ```swift
 let image = await UIApplication.shared.stableScrollViewSnapshot()
