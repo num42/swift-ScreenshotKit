@@ -17,6 +17,10 @@ let package = Package(
     targets: [
         .target(
             name: "ScreenshotKit"
-        )
+        ),
+        .testTarget(
+            name: "ScreenshotKitTests",
+            dependencies: ["ScreenshotKit"]
+        ),
     ]
 )
